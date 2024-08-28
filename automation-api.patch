@@ -1,0 +1,1033 @@
+From f8d36c01ea5810bb95fe3204f9b6ed9b334fa17d Mon Sep 17 00:00:00 2001
+From: jbenitgu <=>
+Date: Wed, 26 Jun 2024 10:27:27 -0500
+Subject: [PATCH 1/5] automation
+
+---
+ .gitignore                                    |  35 ++++
+ pom.xml                                       | 183 ++++++++++++++++++
+ serenity.properties                           |   1 +
+ .../java/com/nttdata/CucumberTestSuite.java   |  14 ++
+ src/test/java/com/nttdata/model/Articulo.java |  45 +++++
+ .../com/nttdata/petstore/CrearUsuario.java    |  30 +++
+ .../petstore/CrearUsuarioStepsDefs.java       |  33 ++++
+ .../java/com/nttdata/place/ArticuloStep.java  |  46 +++++
+ .../com/nttdata/place/ArticuloStepDef.java    |  27 +++
+ .../features/Consultar Articulos.feature      |   7 +
+ .../resources/features/crear_usuario.feature  |   8 +
+ 11 files changed, 429 insertions(+)
+ create mode 100644 .gitignore
+ create mode 100644 pom.xml
+ create mode 100644 serenity.properties
+ create mode 100644 src/test/java/com/nttdata/CucumberTestSuite.java
+ create mode 100644 src/test/java/com/nttdata/model/Articulo.java
+ create mode 100644 src/test/java/com/nttdata/petstore/CrearUsuario.java
+ create mode 100644 src/test/java/com/nttdata/petstore/CrearUsuarioStepsDefs.java
+ create mode 100644 src/test/java/com/nttdata/place/ArticuloStep.java
+ create mode 100644 src/test/java/com/nttdata/place/ArticuloStepDef.java
+ create mode 100644 src/test/resources/features/Consultar Articulos.feature
+ create mode 100644 src/test/resources/features/crear_usuario.feature
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..b425f09
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,35 @@
++target/
++!.mvn/wrapper/maven-wrapper.jar
++!**/src/main/**/target/
++!**/src/test/**/target/
++
++### IntelliJ IDEA ###
++.idea/
++*.iws
++*.iml
++*.ipr
++
++### Eclipse ###
++.apt_generated
++.classpath
++.factorypath
++.project
++.settings
++.springBeans
++.sts4-cache
++
++### NetBeans ###
++/nbproject/private/
++/nbbuild/
++/dist/
++/nbdist/
++/.nb-gradle/
++build/
++!**/src/main/**/build/
++!**/src/test/**/build/
++
++### VS Code ###
++.vscode/
++
++### Mac OS ###
++.DS_Store
+\ No newline at end of file
+diff --git a/pom.xml b/pom.xml
+new file mode 100644
+index 0000000..d95f26d
+--- /dev/null
++++ b/pom.xml
+@@ -0,0 +1,183 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns="http://maven.apache.org/POM/4.0.0"
++         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++    <modelVersion>4.0.0</modelVersion>
++
++    <groupId>org.example</groupId>
++    <artifactId>api-test-qa-lab</artifactId>
++    <version>1.0-SNAPSHOT</version>
++
++    <name>Sample Serenity BDD project using Cucumber</name>
++
++    <properties>
++        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
++        <serenity.version>2.4.51</serenity.version>
++        <serenity.maven.version>2.4.51</serenity.maven.version>
++        <serenity.cucumber.version>2.4.51</serenity.cucumber.version>
++        <logback.version>1.2.3</logback.version>
++        <encoding>UTF-8</encoding>
++        <tags></tags>
++        <parallel.tests>4</parallel.tests>
++        <webdriver.base.url></webdriver.base.url>
++    </properties>
++
++    <dependencies>
++        <dependency>
++            <groupId>ch.qos.logback</groupId>
++            <artifactId>logback-classic</artifactId>
++            <version>${logback.version}</version>
++        </dependency>
++
++        <!-- Serenity Dependencies -->
++        <dependency>
++            <groupId>net.serenity-bdd</groupId>
++            <artifactId>serenity-core</artifactId>
++            <version>${serenity.version}</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>net.serenity-bdd</groupId>
++            <artifactId>serenity-junit</artifactId>
++            <version>${serenity.version}</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>net.serenity-bdd</groupId>
++            <artifactId>serenity-rest-assured</artifactId>
++            <version>${serenity.version}</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>net.serenity-bdd</groupId>
++            <artifactId>serenity-screenplay</artifactId>
++            <version>${serenity.version}</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>net.serenity-bdd</groupId>
++            <artifactId>serenity-screenplay-rest</artifactId>
++            <version>${serenity.version}</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>net.serenity-bdd</groupId>
++            <artifactId>serenity-cucumber6</artifactId>
++            <version>${serenity.cucumber.version}</version>
++            <scope>test</scope>
++        </dependency>
++
++        <!-- libraries used directly from serenity-core-->
++        <dependency>
++            <groupId>io.rest-assured</groupId>
++            <artifactId>rest-assured</artifactId>
++            <version>4.3.2</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>io.rest-assured</groupId>
++            <artifactId>json-path</artifactId>
++            <version>4.3.3</version>
++        </dependency>
++        <dependency>
++            <groupId>io.rest-assured</groupId>
++            <artifactId>xml-path</artifactId>
++            <version>4.3.3</version>
++        </dependency>
++        <dependency>
++            <groupId>org.codehaus.groovy</groupId>
++            <artifactId>groovy</artifactId>
++            <version>3.0.6</version>
++        </dependency>
++        <dependency>
++            <groupId>org.codehaus.groovy</groupId>
++            <artifactId>groovy-xml</artifactId>
++            <version>3.0.6</version>
++        </dependency>
++
++        <!-- General test libraries -->
++        <dependency>
++            <groupId>junit</groupId>
++            <artifactId>junit</artifactId>
++            <version>4.13.1</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.assertj</groupId>
++            <artifactId>assertj-core</artifactId>
++            <version>3.6.2</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.hamcrest</groupId>
++            <artifactId>hamcrest</artifactId>
++            <version>2.2</version>
++            <scope>test</scope>
++        </dependency>
++    </dependencies>
++    <build>
++        <plugins>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-surefire-plugin</artifactId>
++                <version>3.0.0-M5</version>
++                <configuration>
++                    <skip>true</skip>
++                </configuration>
++            </plugin>
++            <plugin>
++                <artifactId>maven-failsafe-plugin</artifactId>
++                <version>3.0.0-M5</version>
++                <configuration>
++                    <includes>
++                        <include>**/*Test.java</include>
++                        <include>**/Test*.java</include>
++                        <include>**/*TestSuite.java</include>
++                        <include>**/When*.java</include>
++                    </includes>
++                    <systemPropertyVariables>
++                        <webdriver.base.url>${webdriver.base.url}</webdriver.base.url>
++                    </systemPropertyVariables>
++                    <parallel>classes</parallel>
++                    <threadCount>${parallel.tests}</threadCount>
++                    <forkCount>${parallel.tests}</forkCount>
++                </configuration>
++                <executions>
++                    <execution>
++                        <goals>
++                            <goal>integration-test</goal>
++                            <goal>verify</goal>
++                        </goals>
++                    </execution>
++                </executions>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-compiler-plugin</artifactId>
++                <version>3.8.0</version>
++                <configuration>
++                    <source>1.8</source>
++                    <target>1.8</target>
++                </configuration>
++            </plugin>
++            <plugin>
++                <groupId>net.serenity-bdd.maven.plugins</groupId>
++                <artifactId>serenity-maven-plugin</artifactId>
++                <version>${serenity.maven.version}</version>
++                <configuration>
++                    <tags>${tags}</tags>
++                </configuration>
++                <executions>
++                    <execution>
++                        <id>serenity-reports</id>
++                        <phase>post-integration-test</phase>
++                        <goals>
++                            <goal>aggregate</goal>
++                        </goals>
++                    </execution>
++                </executions>
++            </plugin>
++        </plugins>
++    </build>
++
++</project>
+\ No newline at end of file
+diff --git a/serenity.properties b/serenity.properties
+new file mode 100644
+index 0000000..26074ad
+--- /dev/null
++++ b/serenity.properties
+@@ -0,0 +1 @@
++serenity.project.name=Serenity and Cucumber QA Innovation Lab
+\ No newline at end of file
+diff --git a/src/test/java/com/nttdata/CucumberTestSuite.java b/src/test/java/com/nttdata/CucumberTestSuite.java
+new file mode 100644
+index 0000000..0fdbdf6
+--- /dev/null
++++ b/src/test/java/com/nttdata/CucumberTestSuite.java
+@@ -0,0 +1,14 @@
++package com.nttdata;
++
++import io.cucumber.junit.CucumberOptions;
++import net.serenitybdd.cucumber.CucumberWithSerenity;
++import org.junit.runner.RunWith;
++
++@RunWith(CucumberWithSerenity.class)
++@CucumberOptions(
++        plugin = {"pretty"},
++        features = "classpath:features",
++        tags = "@consultaArticulos"
++)
++public class CucumberTestSuite {
++}
+diff --git a/src/test/java/com/nttdata/model/Articulo.java b/src/test/java/com/nttdata/model/Articulo.java
+new file mode 100644
+index 0000000..04bfcde
+--- /dev/null
++++ b/src/test/java/com/nttdata/model/Articulo.java
+@@ -0,0 +1,45 @@
++package com.nttdata.model;
++
++import com.fasterxml.jackson.annotation.JsonPropertyOrder;
++import com.fasterxml.jackson.annotation.*;
++
++@JsonPropertyOrder({"userId", "id", "title", "body" })
++public class Articulo {
++    private int userId;
++    private String id;
++    private String title;
++    private String body;
++
++    public int getUserId() {
++        return userId;
++    }
++
++    public void setUserId(int userId) {
++        this.userId = userId;
++    }
++
++    public String getId() {
++        return id;
++    }
++
++    public void setId(String id) {
++        this.id = id;
++    }
++
++    public String getTitle() {
++        return title;
++    }
++
++    public void setTitle(String title) {
++        this.title = title;
++    }
++
++    public String getBody() {
++        return body;
++    }
++
++    public void setBody(String body) {
++        this.body = body;
++    }
++
++}
+diff --git a/src/test/java/com/nttdata/petstore/CrearUsuario.java b/src/test/java/com/nttdata/petstore/CrearUsuario.java
+new file mode 100644
+index 0000000..fd3c649
+--- /dev/null
++++ b/src/test/java/com/nttdata/petstore/CrearUsuario.java
+@@ -0,0 +1,30 @@
++package com.nttdata.petstore;
++
++import net.serenitybdd.rest.SerenityRest;
++import net.thucydides.core.annotations.Step;
++
++import static net.serenitybdd.rest.SerenityRest.restAssuredThat;
++import static org.hamcrest.CoreMatchers.equalTo;
++
++public class CrearUsuario {
++
++    private static String CREATE_USER = "https://petstore.swagger.io/v2/user";
++
++    @Step("Crear usuario {0} en PetStore")
++    public void crearUsuario(String username, String firstName, String lastName){
++        SerenityRest.given()
++                .contentType("application/json")
++                .body("{\n" +
++                        "  \"id\": 0,\n" +
++                        "  \"username\": \""+username+"\",\n" +
++                        "  \"firstName\": \""+firstName+"\",\n" +
++                        "  \"lastName\": \""+lastName+"\",\n" +
++                        "  \"email\": \"string\",\n" +
++                        "  \"password\": \"string\",\n" +
++                        "  \"phone\": \"string\",\n" +
++                        "  \"userStatus\": 0\n" +
++                        "}")
++                .post(CREATE_USER);
++
++    }
++}
+diff --git a/src/test/java/com/nttdata/petstore/CrearUsuarioStepsDefs.java b/src/test/java/com/nttdata/petstore/CrearUsuarioStepsDefs.java
+new file mode 100644
+index 0000000..ded1c4a
+--- /dev/null
++++ b/src/test/java/com/nttdata/petstore/CrearUsuarioStepsDefs.java
+@@ -0,0 +1,33 @@
++package com.nttdata.petstore;
++
++import io.cucumber.java.en.And;
++import io.cucumber.java.en.Then;
++import io.cucumber.java.en.When;
++import net.serenitybdd.rest.SerenityRest;
++import net.thucydides.core.annotations.Steps;
++
++import static net.serenitybdd.rest.SerenityRest.restAssuredThat;
++import static org.hamcrest.CoreMatchers.equalTo;
++
++public class CrearUsuarioStepsDefs {
++
++    @Steps
++    CrearUsuario crearUsuario;
++
++    @When("creo el usuario con username {string}, firstname {string}, lastname {string}")
++    public void crearUsuario(String username, String firstName, String lastName){
++        crearUsuario.crearUsuario(username, firstName, lastName);
++    }
++
++    @Then("el código de respuesta es {int}")
++    public void elCódigoDeRespuestaEs(int statusCode) {
++        restAssuredThat(response -> response.statusCode(statusCode));
++    }
++
++    @And("el type es {string}")
++    public void elTypeEs(String type) {
++        restAssuredThat(response -> response.body("'type'", equalTo(type)));
++        System.out.println("Type: " + SerenityRest.lastResponse().body().path("type").toString());
++        System.out.println(SerenityRest.lastResponse().print());
++    }
++}
+diff --git a/src/test/java/com/nttdata/place/ArticuloStep.java b/src/test/java/com/nttdata/place/ArticuloStep.java
+new file mode 100644
+index 0000000..eb83747
+--- /dev/null
++++ b/src/test/java/com/nttdata/place/ArticuloStep.java
+@@ -0,0 +1,46 @@
++package com.nttdata.place;
++
++import com.nttdata.model.Articulo;
++import io.restassured.response.Response;
++import net.serenitybdd.rest.SerenityRest;
++import net.thucydides.core.annotations.Step;
++
++import java.util.List;
++
++import static io.restassured.RestAssured.given;
++
++public class ArticuloStep {
++
++    private static String URL = null;
++    Response response;
++
++    public void definirurl(String url){
++        URL = url;
++    };
++
++    public void consultaArtuculos(){
++
++        response =
++        given()
++                .contentType("application/json")
++                .log()
++                .all()
++                .get(URL+"/posts")
++               // .then()
++                //.log()
++                //.all()
++                ;
++
++    };
++
++    public void imprimirArticulos() {
++        //Convertimos el objeto JSON a un List
++        List<Articulo> articulos = response.jsonPath().getList("", Articulo.class);
++        System.out.println("Total: "+articulos.size());
++        for(Articulo articulo:articulos){
++            System.out.println("Titulo: "+ articulo.getId() + " - " +articulo.getTitle());
++        }
++    }
++
++
++}
+diff --git a/src/test/java/com/nttdata/place/ArticuloStepDef.java b/src/test/java/com/nttdata/place/ArticuloStepDef.java
+new file mode 100644
+index 0000000..afe1b20
+--- /dev/null
++++ b/src/test/java/com/nttdata/place/ArticuloStepDef.java
+@@ -0,0 +1,27 @@
++package com.nttdata.place;
++
++import io.cucumber.java.en.Given;
++import io.cucumber.java.en.Then;
++import io.cucumber.java.en.When;
++import net.thucydides.core.annotations.Steps;
++
++public class ArticuloStepDef {
++
++    @Steps
++    ArticuloStep articulo;
++
++    @Given("la url {string} del servicio")
++    public void laUrlDelServicio(String url) {
++        articulo.definirurl(url);
++    }
++
++    @When("hago la consulta de los articulos")
++    public void hagoLaConsultaDeLosArticulos() {
++        articulo.consultaArtuculos();
++    }
++
++    @Then("imprimo los articulos")
++    public void imprimoLosArticulos() {
++        articulo.imprimirArticulos();
++    }
++}
+diff --git a/src/test/resources/features/Consultar Articulos.feature b/src/test/resources/features/Consultar Articulos.feature
+new file mode 100644
+index 0000000..c28e430
+--- /dev/null
++++ b/src/test/resources/features/Consultar Articulos.feature	
+@@ -0,0 +1,7 @@
++Feature: Consulta un servicio
++
++  @consultaArticulos
++  Scenario: Consulta un servicio
++    Given la url "https://jsonplaceholder.typicode.com" del servicio
++    When hago la consulta de los articulos
++    Then imprimo los articulos
+\ No newline at end of file
+diff --git a/src/test/resources/features/crear_usuario.feature b/src/test/resources/features/crear_usuario.feature
+new file mode 100644
+index 0000000..03d0122
+--- /dev/null
++++ b/src/test/resources/features/crear_usuario.feature
+@@ -0,0 +1,8 @@
++Feature: Crear usuario PetStore
++
++  @test1
++  Scenario: Crear usuario
++
++    When creo el usuario con username "jkbenites", firstname "Jean", lastname "Benites"
++    Then el código de respuesta es 200
++    And el type es "unknown"
+\ No newline at end of file
+-- 
+2.46.0.windows.1
+
+
+From 977e56a23a5b826ac5090d2ca926874e9916d29e Mon Sep 17 00:00:00 2001
+From: jbenitgu <=>
+Date: Wed, 26 Jun 2024 10:31:58 -0500
+Subject: [PATCH 2/5] fix automation api
+
+---
+ src/test/java/com/nttdata/CucumberTestSuite.java     | 2 +-
+ src/test/java/com/nttdata/petstore/CrearUsuario.java | 7 ++++++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/src/test/java/com/nttdata/CucumberTestSuite.java b/src/test/java/com/nttdata/CucumberTestSuite.java
+index 0fdbdf6..fde9c7f 100644
+--- a/src/test/java/com/nttdata/CucumberTestSuite.java
++++ b/src/test/java/com/nttdata/CucumberTestSuite.java
+@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
+ @CucumberOptions(
+         plugin = {"pretty"},
+         features = "classpath:features",
+-        tags = "@consultaArticulos"
++        tags = "@test1"
+ )
+ public class CucumberTestSuite {
+ }
+diff --git a/src/test/java/com/nttdata/petstore/CrearUsuario.java b/src/test/java/com/nttdata/petstore/CrearUsuario.java
+index fd3c649..bca7823 100644
+--- a/src/test/java/com/nttdata/petstore/CrearUsuario.java
++++ b/src/test/java/com/nttdata/petstore/CrearUsuario.java
+@@ -14,6 +14,7 @@ public class CrearUsuario {
+     public void crearUsuario(String username, String firstName, String lastName){
+         SerenityRest.given()
+                 .contentType("application/json")
++                .relaxedHTTPSValidation()
+                 .body("{\n" +
+                         "  \"id\": 0,\n" +
+                         "  \"username\": \""+username+"\",\n" +
+@@ -24,7 +25,11 @@ public class CrearUsuario {
+                         "  \"phone\": \"string\",\n" +
+                         "  \"userStatus\": 0\n" +
+                         "}")
+-                .post(CREATE_USER);
++                .log().all()
++                .post(CREATE_USER)
++                .then()
++                .log().all()
++        ;
+ 
+     }
+ }
+-- 
+2.46.0.windows.1
+
+
+From b0aa54ed6af30ad9cc94b98e66cb6daf1513f871 Mon Sep 17 00:00:00 2001
+From: jbenitgu <=>
+Date: Wed, 26 Jun 2024 11:46:14 -0500
+Subject: [PATCH 3/5] correccion
+
+---
+ src/test/java/com/nttdata/CucumberTestSuite.java |  2 +-
+ .../nttdata/{place => glue}/ArticuloStepDef.java |  3 ++-
+ .../CrearUsuarioStepsDefs.java                   | 13 ++++---------
+ src/test/java/com/nttdata/glue/MyStepdefs.java   | 16 ++++++++++++++++
+ .../nttdata/{place => steps}/ArticuloStep.java   |  2 +-
+ .../{petstore => steps}/CrearUsuario.java        | 12 +++++++++++-
+ .../resources/features/PruebaStepDef.feature     |  9 +++++++++
+ 7 files changed, 44 insertions(+), 13 deletions(-)
+ rename src/test/java/com/nttdata/{place => glue}/ArticuloStepDef.java (90%)
+ rename src/test/java/com/nttdata/{petstore => glue}/CrearUsuarioStepsDefs.java (57%)
+ create mode 100644 src/test/java/com/nttdata/glue/MyStepdefs.java
+ rename src/test/java/com/nttdata/{place => steps}/ArticuloStep.java (97%)
+ rename src/test/java/com/nttdata/{petstore => steps}/CrearUsuario.java (72%)
+ create mode 100644 src/test/resources/features/PruebaStepDef.feature
+
+diff --git a/src/test/java/com/nttdata/CucumberTestSuite.java b/src/test/java/com/nttdata/CucumberTestSuite.java
+index fde9c7f..b96a70c 100644
+--- a/src/test/java/com/nttdata/CucumberTestSuite.java
++++ b/src/test/java/com/nttdata/CucumberTestSuite.java
+@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
+ @CucumberOptions(
+         plugin = {"pretty"},
+         features = "classpath:features",
+-        tags = "@test1"
++        tags = "@pruebaStepDef"   //  ==> Definir el @tag  a ejecutar
+ )
+ public class CucumberTestSuite {
+ }
+diff --git a/src/test/java/com/nttdata/place/ArticuloStepDef.java b/src/test/java/com/nttdata/glue/ArticuloStepDef.java
+similarity index 90%
+rename from src/test/java/com/nttdata/place/ArticuloStepDef.java
+rename to src/test/java/com/nttdata/glue/ArticuloStepDef.java
+index afe1b20..185712b 100644
+--- a/src/test/java/com/nttdata/place/ArticuloStepDef.java
++++ b/src/test/java/com/nttdata/glue/ArticuloStepDef.java
+@@ -1,5 +1,6 @@
+-package com.nttdata.place;
++package com.nttdata.glue;
+ 
++import com.nttdata.steps.ArticuloStep;
+ import io.cucumber.java.en.Given;
+ import io.cucumber.java.en.Then;
+ import io.cucumber.java.en.When;
+diff --git a/src/test/java/com/nttdata/petstore/CrearUsuarioStepsDefs.java b/src/test/java/com/nttdata/glue/CrearUsuarioStepsDefs.java
+similarity index 57%
+rename from src/test/java/com/nttdata/petstore/CrearUsuarioStepsDefs.java
+rename to src/test/java/com/nttdata/glue/CrearUsuarioStepsDefs.java
+index ded1c4a..dac9374 100644
+--- a/src/test/java/com/nttdata/petstore/CrearUsuarioStepsDefs.java
++++ b/src/test/java/com/nttdata/glue/CrearUsuarioStepsDefs.java
+@@ -1,14 +1,11 @@
+-package com.nttdata.petstore;
++package com.nttdata.glue;
+ 
++import com.nttdata.steps.CrearUsuario;
+ import io.cucumber.java.en.And;
+ import io.cucumber.java.en.Then;
+ import io.cucumber.java.en.When;
+-import net.serenitybdd.rest.SerenityRest;
+ import net.thucydides.core.annotations.Steps;
+ 
+-import static net.serenitybdd.rest.SerenityRest.restAssuredThat;
+-import static org.hamcrest.CoreMatchers.equalTo;
+-
+ public class CrearUsuarioStepsDefs {
+ 
+     @Steps
+@@ -21,13 +18,11 @@ public class CrearUsuarioStepsDefs {
+ 
+     @Then("el código de respuesta es {int}")
+     public void elCódigoDeRespuestaEs(int statusCode) {
+-        restAssuredThat(response -> response.statusCode(statusCode));
++       crearUsuario.validarCodigoRespuesta(statusCode);
+     }
+ 
+     @And("el type es {string}")
+     public void elTypeEs(String type) {
+-        restAssuredThat(response -> response.body("'type'", equalTo(type)));
+-        System.out.println("Type: " + SerenityRest.lastResponse().body().path("type").toString());
+-        System.out.println(SerenityRest.lastResponse().print());
++      crearUsuario.validarType(type);
+     }
+ }
+diff --git a/src/test/java/com/nttdata/glue/MyStepdefs.java b/src/test/java/com/nttdata/glue/MyStepdefs.java
+new file mode 100644
+index 0000000..b0e2331
+--- /dev/null
++++ b/src/test/java/com/nttdata/glue/MyStepdefs.java
+@@ -0,0 +1,16 @@
++package com.nttdata.glue;
++
++import io.cucumber.java.en.When;
++
++public class MyStepdefs {
++
++    @When("hare un post con los datos de usuario: {string}, nombres: {string}, apellidos: {string}")
++    public void hareUnPostConLosDatosDeUsuarioNombresApellidos(String arg0, String arg1, String apellidos) {
++        System.out.println("ejecuta codigo java");
++        System.out.println("Usuario: " +  arg0);
++        System.out.println("Nombre: " +  arg1);
++        System.out.println("Apellidos: " +  apellidos);
++    }
++
++
++}
+diff --git a/src/test/java/com/nttdata/place/ArticuloStep.java b/src/test/java/com/nttdata/steps/ArticuloStep.java
+similarity index 97%
+rename from src/test/java/com/nttdata/place/ArticuloStep.java
+rename to src/test/java/com/nttdata/steps/ArticuloStep.java
+index eb83747..bc49816 100644
+--- a/src/test/java/com/nttdata/place/ArticuloStep.java
++++ b/src/test/java/com/nttdata/steps/ArticuloStep.java
+@@ -1,4 +1,4 @@
+-package com.nttdata.place;
++package com.nttdata.steps;
+ 
+ import com.nttdata.model.Articulo;
+ import io.restassured.response.Response;
+diff --git a/src/test/java/com/nttdata/petstore/CrearUsuario.java b/src/test/java/com/nttdata/steps/CrearUsuario.java
+similarity index 72%
+rename from src/test/java/com/nttdata/petstore/CrearUsuario.java
+rename to src/test/java/com/nttdata/steps/CrearUsuario.java
+index bca7823..7e65f57 100644
+--- a/src/test/java/com/nttdata/petstore/CrearUsuario.java
++++ b/src/test/java/com/nttdata/steps/CrearUsuario.java
+@@ -1,4 +1,4 @@
+-package com.nttdata.petstore;
++package com.nttdata.steps;
+ 
+ import net.serenitybdd.rest.SerenityRest;
+ import net.thucydides.core.annotations.Step;
+@@ -32,4 +32,14 @@ public class CrearUsuario {
+         ;
+ 
+     }
++
++    public void validarType(String type) {
++        restAssuredThat(response -> response.body("'type'", equalTo(type)));
++        System.out.println("Type: " + SerenityRest.lastResponse().body().path("type").toString());
++        System.out.println(SerenityRest.lastResponse().print());
++    }
++
++    public void validarCodigoRespuesta(int statusCode) {
++        restAssuredThat(response -> response.statusCode(statusCode));
++    }
+ }
+diff --git a/src/test/resources/features/PruebaStepDef.feature b/src/test/resources/features/PruebaStepDef.feature
+new file mode 100644
+index 0000000..88dff9e
+--- /dev/null
++++ b/src/test/resources/features/PruebaStepDef.feature
+@@ -0,0 +1,9 @@
++Feature: Prueba
++
++  @pruebaStepDef
++  Scenario Outline: Prueba de StepDef
++    When hare un post con los datos de usuario: "<usuario>", nombres: "<nombres>", apellidos: "<apellidos>"
++
++    Examples:
++      | usuario  | nombres | apellidos |
++      | jbenites | jean    | benites   |
+\ No newline at end of file
+-- 
+2.46.0.windows.1
+
+
+From d7b046d622d16e90b77b36087aa60317ff1b5ed6 Mon Sep 17 00:00:00 2001
+From: jbenitgu <=>
+Date: Wed, 26 Jun 2024 12:20:00 -0500
+Subject: [PATCH 4/5] cambios!!
+
+---
+ .../java/com/nttdata/CucumberTestSuite.java   |  2 +-
+ .../java/com/nttdata/glue/WorlStepDef.java    | 31 +++++++++++++++++++
+ src/test/java/com/nttdata/steps/World.java    | 27 ++++++++++++++++
+ .../resources/features/ServicioWord.feature   |  9 ++++++
+ 4 files changed, 68 insertions(+), 1 deletion(-)
+ create mode 100644 src/test/java/com/nttdata/glue/WorlStepDef.java
+ create mode 100644 src/test/java/com/nttdata/steps/World.java
+ create mode 100644 src/test/resources/features/ServicioWord.feature
+
+diff --git a/src/test/java/com/nttdata/CucumberTestSuite.java b/src/test/java/com/nttdata/CucumberTestSuite.java
+index b96a70c..7490f4a 100644
+--- a/src/test/java/com/nttdata/CucumberTestSuite.java
++++ b/src/test/java/com/nttdata/CucumberTestSuite.java
+@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
+ @CucumberOptions(
+         plugin = {"pretty"},
+         features = "classpath:features",
+-        tags = "@pruebaStepDef"   //  ==> Definir el @tag  a ejecutar
++        tags = "@pruebaWorld"   //  ==> Definir el @tag  a ejecutar
+ )
+ public class CucumberTestSuite {
+ }
+diff --git a/src/test/java/com/nttdata/glue/WorlStepDef.java b/src/test/java/com/nttdata/glue/WorlStepDef.java
+new file mode 100644
+index 0000000..e755124
+--- /dev/null
++++ b/src/test/java/com/nttdata/glue/WorlStepDef.java
+@@ -0,0 +1,31 @@
++package com.nttdata.glue;
++
++import com.nttdata.steps.World;
++import io.cucumber.java.en.And;
++import io.cucumber.java.en.Then;
++import io.cucumber.java.en.When;
++import net.serenitybdd.rest.SerenityRest;
++import net.thucydides.core.annotations.Step;
++import net.thucydides.core.annotations.Steps;
++import org.junit.Assert;
++
++public class WorlStepDef {
++    @Steps
++    World world;   // world = new World();
++
++    @When("ejecuto servicio Word")
++    public void ejecutoServicioWord() {
++       world.consultarWorld();
++    }
++
++    @Then("valido el codigo de respuesta {int}")
++    public void validoElCodigoDeRespuesta(int status) {
++       world.validacionCodigoRespuesta(status);
++    }
++
++    @And("valido el contenido")
++    public void validoElContenido() {
++        Assert.assertEquals("World", SerenityRest.lastResponse().body().path("name").toString());
++        ;
++    }
++}
+diff --git a/src/test/java/com/nttdata/steps/World.java b/src/test/java/com/nttdata/steps/World.java
+new file mode 100644
+index 0000000..d454fff
+--- /dev/null
++++ b/src/test/java/com/nttdata/steps/World.java
+@@ -0,0 +1,27 @@
++package com.nttdata.steps;
++
++import net.serenitybdd.rest.SerenityRest;
++import org.junit.Assert;
++
++public class World {
++
++    private String URL_BASE = "http://api.football-data.org/v4/";
++
++    public void consultarWorld(){
++
++        SerenityRest.given()
++                .baseUri(URL_BASE)
++                .log()
++                .all()
++                .when()
++                .get("areas/2267")
++                .then()
++                .log()
++                .all()
++                ;
++    }
++
++    public void validacionCodigoRespuesta(int codigo){
++        Assert.assertEquals(codigo, SerenityRest.lastResponse().statusCode());
++    }
++}
+diff --git a/src/test/resources/features/ServicioWord.feature b/src/test/resources/features/ServicioWord.feature
+new file mode 100644
+index 0000000..4225369
+--- /dev/null
++++ b/src/test/resources/features/ServicioWord.feature
+@@ -0,0 +1,9 @@
++Feature: World
++
++  @pruebaWorld
++  Scenario: Prueba Servicio
++
++    When ejecuto servicio Word
++    Then valido el codigo de respuesta 200
++    And valido el contenido
++
+-- 
+2.46.0.windows.1
+
+
+From 4649e604c6c3c66ad42ff9fe8a4b2b2f31356a62 Mon Sep 17 00:00:00 2001
+From: jbenitgu <=>
+Date: Mon, 15 Jul 2024 16:11:05 -0500
+Subject: [PATCH 5/5] fix
+
+---
+ .../java/com/nttdata/glue/MyStepdefs.java     | 16 ----------
+ .../java/com/nttdata/glue/WorlStepDef.java    | 31 -------------------
+ src/test/java/com/nttdata/steps/World.java    | 27 ----------------
+ .../resources/features/PruebaStepDef.feature  |  9 ------
+ .../resources/features/ServicioWord.feature   |  9 ------
+ .../resources/features/crear_usuario.feature  |  2 +-
+ 6 files changed, 1 insertion(+), 93 deletions(-)
+ delete mode 100644 src/test/java/com/nttdata/glue/MyStepdefs.java
+ delete mode 100644 src/test/java/com/nttdata/glue/WorlStepDef.java
+ delete mode 100644 src/test/java/com/nttdata/steps/World.java
+ delete mode 100644 src/test/resources/features/PruebaStepDef.feature
+ delete mode 100644 src/test/resources/features/ServicioWord.feature
+
+diff --git a/src/test/java/com/nttdata/glue/MyStepdefs.java b/src/test/java/com/nttdata/glue/MyStepdefs.java
+deleted file mode 100644
+index b0e2331..0000000
+--- a/src/test/java/com/nttdata/glue/MyStepdefs.java
++++ /dev/null
+@@ -1,16 +0,0 @@
+-package com.nttdata.glue;
+-
+-import io.cucumber.java.en.When;
+-
+-public class MyStepdefs {
+-
+-    @When("hare un post con los datos de usuario: {string}, nombres: {string}, apellidos: {string}")
+-    public void hareUnPostConLosDatosDeUsuarioNombresApellidos(String arg0, String arg1, String apellidos) {
+-        System.out.println("ejecuta codigo java");
+-        System.out.println("Usuario: " +  arg0);
+-        System.out.println("Nombre: " +  arg1);
+-        System.out.println("Apellidos: " +  apellidos);
+-    }
+-
+-
+-}
+diff --git a/src/test/java/com/nttdata/glue/WorlStepDef.java b/src/test/java/com/nttdata/glue/WorlStepDef.java
+deleted file mode 100644
+index e755124..0000000
+--- a/src/test/java/com/nttdata/glue/WorlStepDef.java
++++ /dev/null
+@@ -1,31 +0,0 @@
+-package com.nttdata.glue;
+-
+-import com.nttdata.steps.World;
+-import io.cucumber.java.en.And;
+-import io.cucumber.java.en.Then;
+-import io.cucumber.java.en.When;
+-import net.serenitybdd.rest.SerenityRest;
+-import net.thucydides.core.annotations.Step;
+-import net.thucydides.core.annotations.Steps;
+-import org.junit.Assert;
+-
+-public class WorlStepDef {
+-    @Steps
+-    World world;   // world = new World();
+-
+-    @When("ejecuto servicio Word")
+-    public void ejecutoServicioWord() {
+-       world.consultarWorld();
+-    }
+-
+-    @Then("valido el codigo de respuesta {int}")
+-    public void validoElCodigoDeRespuesta(int status) {
+-       world.validacionCodigoRespuesta(status);
+-    }
+-
+-    @And("valido el contenido")
+-    public void validoElContenido() {
+-        Assert.assertEquals("World", SerenityRest.lastResponse().body().path("name").toString());
+-        ;
+-    }
+-}
+diff --git a/src/test/java/com/nttdata/steps/World.java b/src/test/java/com/nttdata/steps/World.java
+deleted file mode 100644
+index d454fff..0000000
+--- a/src/test/java/com/nttdata/steps/World.java
++++ /dev/null
+@@ -1,27 +0,0 @@
+-package com.nttdata.steps;
+-
+-import net.serenitybdd.rest.SerenityRest;
+-import org.junit.Assert;
+-
+-public class World {
+-
+-    private String URL_BASE = "http://api.football-data.org/v4/";
+-
+-    public void consultarWorld(){
+-
+-        SerenityRest.given()
+-                .baseUri(URL_BASE)
+-                .log()
+-                .all()
+-                .when()
+-                .get("areas/2267")
+-                .then()
+-                .log()
+-                .all()
+-                ;
+-    }
+-
+-    public void validacionCodigoRespuesta(int codigo){
+-        Assert.assertEquals(codigo, SerenityRest.lastResponse().statusCode());
+-    }
+-}
+diff --git a/src/test/resources/features/PruebaStepDef.feature b/src/test/resources/features/PruebaStepDef.feature
+deleted file mode 100644
+index 88dff9e..0000000
+--- a/src/test/resources/features/PruebaStepDef.feature
++++ /dev/null
+@@ -1,9 +0,0 @@
+-Feature: Prueba
+-
+-  @pruebaStepDef
+-  Scenario Outline: Prueba de StepDef
+-    When hare un post con los datos de usuario: "<usuario>", nombres: "<nombres>", apellidos: "<apellidos>"
+-
+-    Examples:
+-      | usuario  | nombres | apellidos |
+-      | jbenites | jean    | benites   |
+\ No newline at end of file
+diff --git a/src/test/resources/features/ServicioWord.feature b/src/test/resources/features/ServicioWord.feature
+deleted file mode 100644
+index 4225369..0000000
+--- a/src/test/resources/features/ServicioWord.feature
++++ /dev/null
+@@ -1,9 +0,0 @@
+-Feature: World
+-
+-  @pruebaWorld
+-  Scenario: Prueba Servicio
+-
+-    When ejecuto servicio Word
+-    Then valido el codigo de respuesta 200
+-    And valido el contenido
+-
+diff --git a/src/test/resources/features/crear_usuario.feature b/src/test/resources/features/crear_usuario.feature
+index 03d0122..f7d3f44 100644
+--- a/src/test/resources/features/crear_usuario.feature
++++ b/src/test/resources/features/crear_usuario.feature
+@@ -3,6 +3,6 @@ Feature: Crear usuario PetStore
+   @test1
+   Scenario: Crear usuario
+ 
+-    When creo el usuario con username "jkbenites", firstname "Jean", lastname "Benites"
++    When creo el usuario con username "jperez", firstname "Juan", lastname "Perez"
+     Then el código de respuesta es 200
+     And el type es "unknown"
+\ No newline at end of file
+-- 
+2.46.0.windows.1
+

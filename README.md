@@ -1,2 +1,2 @@
-# QALabAutomationAPI
-Evaluacion Automatizacion API
+# QAInnovationLab
+Automation Team / For education purpose
